@@ -1,0 +1,1 @@
+CREATE DATABASE push_dev OWNER push;
