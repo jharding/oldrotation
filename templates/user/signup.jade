@@ -1,0 +1,13 @@
+extends ../base
+block head
+  title Sign Up
+block body
+  form(action="/signup", method="post")
+    include ../includes/csrf_form_token
+    div
+      label Email:
+      input(type="text", name="email")
+    div
+      label Password:
+      input(type="password", name="password")
+    button(type="submit") Sign Up
