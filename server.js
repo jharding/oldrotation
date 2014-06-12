@@ -6,9 +6,11 @@ var bodyparser = require('koa-bodyparser');
 var thunkify = require('thunkify');
 var compose = require('koa-compose');
 
-var auth = require('./utils/auth.js');
-var usersController = require('./controllers/users.js');
-var db = require('./utils/postgres.js');
+require('./utils/app_require.js')(__dirname); // add appRequire to global namespace
+var auth = appRequire('utils/auth');
+var csrf = appRequire('utils/csrf');
+var usersController = appRequire('controllers/users');
+var db = appRequire('utils/postgres');
 
 db.configure({ user: 'push', database: 'push_dev' });
 
@@ -20,12 +22,14 @@ app.use(logger());
 app.use(bodyparser());
 app.use(session());
 app.use(auth.initialize());
+app.use(csrf.protect(app));
 
-var a = compose([auth.auth('local'), usersController.login]);
-app.use(_.get('/signup', usersController.signupPage));
+app.use(_.get('/signup', usersController.showSignup));
 app.use(_.post('/signup', usersController.signup));
-app.use(_.get('/login', usersController.loginPage));
-app.use(_.post('/login', a));
+app.use(_.get('/login', usersController.showLogin));
+app.use(_.post('/login', usersController.login));
+app.use(_.get('/logout', usersController.logout));
+app.use(_.get('/account', usersController.showUser));
 
 app.listen(3000);
 console.log('listening on port 3000');

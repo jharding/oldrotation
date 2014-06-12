@@ -1,9 +1,10 @@
 doctype html
 html
   head 
-    title= Login
+    title Login
   body
     form(action='login', method='post')
+      include includes/csrf_form_token
       div
         label Email:
         input(type='text', name='email')

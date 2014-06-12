@@ -1,33 +1,55 @@
-var jade = require('jade'),
-    thunkify = require('thunkify');
+var auth, authenticate, compose, controller, mw, userRepo, views;
 
-var users = require('../models/users.js');
+// external modules
+compose = require('koa-compose');
 
-module.exports = {
-  loginPage: loginPage,
-  signupPage: signupPage,
-  login: login,
-  signup: signup,
+// internal modules
+auth = appRequire('utils/auth');
+mw = appRequire('utils/endpoint_mw');
+userRepo = appRequire('models/users');
+views = appRequire('views/users');
 
+authenticate = auth.authenticate('local');
+
+// export
+controller = module.exports = {
+  showSignup: compose([
+    mw.requireUnauth,
+    showSignup
+  ]),
+
+  showLogin: compose([
+    mw.requireUnauth,
+    showLogin
+  ]),
+
+  showUser: function* showUser() {
+    this.body = this.user;
+  },
+
+  signup: compose([
+    mw.requireUnauth,
+    signup
+  ]),
+
+  login: compose([
+    mw.requireUnauth,
+    authenticate,
+    redirectAfterLogin
+  ]),
+
+  logout: compose([
+    mw.logout,
+    mw.redirectTo('/login')
+  ])
 };
 
-function* loginPage() {
-  var render = thunkify(jade.renderFile);
-  this.body = yield render('templates/login.jade', null);
+function* showSignup() {
+  this.body = yield views.signupForm.call(this);
 }
 
-function* signupPage() {
-  var render = thunkify(jade.renderFile);
-  this.body = yield render('templates/signup.jade', null);
-}
-
-function* login() {
-  var email, password;
-
-  email = this.request.body.email;
-  password = this.request.body.password;
-
-  this.body = yield users.verifyCredentials(email, password);
+function* showLogin() {
+  this.body = yield views.loginForm.call(this);
 }
 
 function* signup() {
@@ -36,9 +58,16 @@ function* signup() {
   email = this.request.body.email;
   password = this.request.body.password;
 
-  if (yield users.isEmailTaken(email)) {
+  if (yield userRepo.isEmailTaken(email)) {
     this.throw(422, 'email is already associated with an account');
   }
 
-  this.body = yield users.createUser(email, password);
+  yield userRepo.create(email, password);
+
+  // signup was successful, so let's log them in
+  return yield controller.login.call(this);
+}
+
+function* redirectAfterLogin() {
+  this.redirect(this.request.body.redirect_to || '/');
 }
