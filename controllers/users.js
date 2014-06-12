@@ -6,7 +6,7 @@ compose = require('koa-compose');
 // internal modules
 auth = appRequire('utils/auth');
 mw = appRequire('utils/endpoint_mw');
-userRepo = appRequire('models/users');
+userRepo = appRequire('repos/users');
 views = appRequire('views/users');
 
 authenticate = auth.authenticate('local');

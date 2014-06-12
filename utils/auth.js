@@ -8,7 +8,7 @@ LocalStrategy = require('passport-local').Strategy;
 passport = require('koa-passport');
 
 // internal modules
-userRepo = appRequire('models/users');
+userRepo = appRequire('repos/users');
 
 passport.serializeUser(co(serializeUser));
 passport.deserializeUser(co(deserializeUser));
