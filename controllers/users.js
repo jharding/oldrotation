@@ -13,25 +13,6 @@ authenticate = auth.authenticate('local');
 
 // export
 controller = module.exports = {
-  showSignup: compose([
-    mw.requireUnauth,
-    showSignup
-  ]),
-
-  showLogin: compose([
-    mw.requireUnauth,
-    showLogin
-  ]),
-
-  showUser: function* showUser() {
-    this.body = this.user;
-  },
-
-  signup: compose([
-    mw.requireUnauth,
-    signup
-  ]),
-
   login: compose([
     mw.requireUnauth,
     authenticate,
@@ -41,15 +22,39 @@ controller = module.exports = {
   logout: compose([
     mw.logout,
     mw.redirectTo('/login')
+  ]),
+
+  showLoggedInUser: compose([
+    mw.requireAuth,
+    showLoggedInUser
+  ]),
+
+  showLogin: compose([
+    mw.requireUnauth,
+    showLogin
+  ]),
+
+  showSignup: compose([
+    mw.requireUnauth,
+    showSignup
+  ]),
+
+  signup: compose([
+    mw.requireUnauth,
+    signup
   ])
 };
 
-function* showSignup() {
-  this.body = yield views.signupForm.call(this);
+function* showLoggedInUser() {
+  this.body = yield views.settings.call(this, this.user);
 }
 
 function* showLogin() {
   this.body = yield views.loginForm.call(this);
+}
+
+function* showSignup() {
+  this.body = yield views.signupForm.call(this);
 }
 
 function* signup() {

@@ -29,7 +29,8 @@ app.use(_.post('/signup', usersController.signup));
 app.use(_.get('/login', usersController.showLogin));
 app.use(_.post('/login', usersController.login));
 app.use(_.get('/logout', usersController.logout));
-app.use(_.get('/account', usersController.showUser));
+app.use(_.get('/account', usersController.showLoggedInUser));
+app.use(_.get('/', usersController.showLoggedInUser));
 
 app.listen(3000);
 console.log('listening on port 3000');

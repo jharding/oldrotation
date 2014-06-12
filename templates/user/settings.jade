@@ -1,0 +1,7 @@
+extends ../logged_in_base
+block head
+  title #{account.email}
+block append body
+  div
+    p id: #{account.id}
+    p email: #{account.email}
