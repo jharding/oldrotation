@@ -1,4 +1,4 @@
-var bcrypt, db, schema, sql, users;
+var bcrypt, db, schema, sql, User, users;
 
 // external modules
 schema = require('sql');
@@ -6,6 +6,7 @@ schema = require('sql');
 // internal modules
 bcrypt = appRequire('utils/bcrypt');
 db = appRequire('utils/postgres');
+User = appRequire('models/user');
 
 sql = schema.define({
   name: 'users',
@@ -36,7 +37,7 @@ users = module.exports = {
   },
 
   verifyCredentials: function* verifyCredentials(email, password) {
-    var query, results, userObj;
+    var json, query, results;
 
     query = sql
     .select(sql.email, sql.password)
@@ -45,15 +46,15 @@ users = module.exports = {
     .toQuery();
 
     results = yield db.exec(query.text, query.values);
-    userObj = results && results.rows && results.rows[0];
+    json = results && results.rows && results.rows[0];
 
-    return userObj ? yield bcrypt.compare(password, userObj.password) : false;
+    return json ? yield bcrypt.compare(password, json.password) : false;
   }
 };
 
 function findByBuilder(col) {
   return function* findBy(val) {
-    var query, results;
+    var json, query, results;
 
     query = sql
     .select()
@@ -62,7 +63,8 @@ function findByBuilder(col) {
     .toQuery();
 
     results = yield db.exec(query.text, query.values);
+    json = results && results.rows && results.rows[0];
 
-    return (results && results.rows && results.rows[0]) || null;
+    return json ? new User(json) : null;
   }
 }
