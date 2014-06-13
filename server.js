@@ -9,6 +9,7 @@ var compose = require('koa-compose');
 require('./utils/app_require.js')(__dirname); // add appRequire to global namespace
 var auth = appRequire('utils/auth');
 var csrf = appRequire('utils/csrf');
+var viewCtx = appRequire('utils/view_ctx');
 var usersController = appRequire('controllers/users');
 var notificationsController = appRequire('controllers/notifications');
 var db = appRequire('utils/postgres');
@@ -24,6 +25,7 @@ app.use(bodyparser());
 app.use(session());
 app.use(auth.initialize());
 app.use(csrf.protect(app));
+app.use(viewCtx);
 
 app.use(_.get('/signup', usersController.showSignup));
 app.use(_.post('/signup', usersController.signup));
