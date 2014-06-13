@@ -10,7 +10,7 @@ module.exports = function* viewCtx(next) {
 };
 
 function buildCtx(o) {
-  return _.extend(o, {
+  return _.extend(o || {}, {
     csrfParam: this.csrfParam,
     csrfToken: this.csrf,
     user: this.user
