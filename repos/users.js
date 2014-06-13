@@ -1,4 +1,4 @@
-var bcrypt, db, schema, sql, User, users;
+var bcrypt, db, repoUtils, schema, sql, User, users;
 
 // external modules
 schema = require('sql');
@@ -6,6 +6,7 @@ schema = require('sql');
 // internal modules
 bcrypt = appRequire('utils/bcrypt');
 db = appRequire('utils/postgres');
+repoUtils = appRequire('utils/repo_utils');
 User = appRequire('models/user');
 
 sql = schema.define({
@@ -17,19 +18,23 @@ sql = schema.define({
 users = module.exports = {
   sql: sql,
 
-  findById: findByBuilder(sql.id),
+  findById: repoUtils.findByBuilder(db, sql, sql.id, User),
 
-  findByEmail: findByBuilder(sql.email),
+  findByEmail: repoUtils.findByBuilder(db, sql, sql.email, User),
 
   create: function* createUser(email, password) {
-    var query, hash, results;
+    var hash, json, query, results;
 
     hash = yield bcrypt.hash(password, 10);
-    query = sql.insert({ email: email, password: hash }).toQuery();
+    query = sql
+    .insert({ email: email, password: hash })
+    .returning(sql.star())
+    .toQuery();
 
     results = yield db.exec(query.text, query.values);
+    json = results && results.rows && results.rows[0];
 
-    return results;
+    return json ? new User(json) : null;
   },
 
   isEmailTaken: function* isEmailTaken(email) {
@@ -51,20 +56,3 @@ users = module.exports = {
     return json ? yield bcrypt.compare(password, json.password) : false;
   }
 };
-
-function findByBuilder(col) {
-  return function* findBy(val) {
-    var json, query, results;
-
-    query = sql
-    .select()
-    .where(col.equals(val))
-    .limit(1)
-    .toQuery();
-
-    results = yield db.exec(query.text, query.values);
-    json = results && results.rows && results.rows[0];
-
-    return json ? new User(json) : null;
-  }
-}

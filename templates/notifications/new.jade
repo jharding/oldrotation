@@ -1,0 +1,10 @@
+extends ../logged_in_base
+block head
+  title Create New Notification
+block body
+  form(action="/notifications/new", method="post")
+    include ../includes/csrf_form_token
+    div
+      label Title:
+      input(type="text", name="title")
+    button(type="submit") Log In

@@ -7,5 +7,6 @@ CREATE TABLE users (
 
 CREATE TABLE notifications (
   id SERIAL PRIMARY KEY, 
-  summary varchar(128) NOT NULL
+  target INT REFERENCES users(id), 
+  title VARCHAR(256) NOT NULL
 );

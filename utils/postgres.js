@@ -16,6 +16,8 @@ function configure(o) {
 function* exec(text, values) {
   var connection, client, done, results;
 
+  console.log(text, values);
+
   connection = yield postgres.connect(config);
   client = connection[0];
   done = connection[1];

@@ -10,6 +10,7 @@ require('./utils/app_require.js')(__dirname); // add appRequire to global namesp
 var auth = appRequire('utils/auth');
 var csrf = appRequire('utils/csrf');
 var usersController = appRequire('controllers/users');
+var notificationsController = appRequire('controllers/notifications');
 var db = appRequire('utils/postgres');
 
 db.configure({ user: 'push', database: 'push_dev' });
@@ -31,6 +32,9 @@ app.use(_.post('/login', usersController.login));
 app.use(_.get('/logout', usersController.logout));
 app.use(_.get('/account', usersController.showLoggedInUser));
 app.use(_.get('/', usersController.showLoggedInUser));
+app.use(_.get('/notifications/new', notificationsController.showNewForm));
+app.use(_.post('/notifications/new', notificationsController.create));
+app.use(_.get('/notifications/:id', notificationsController.show));
 
 app.listen(3000);
 console.log('listening on port 3000');
