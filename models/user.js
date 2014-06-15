@@ -6,29 +6,29 @@ _ = appRequire('utils/utils');
 User = function User(json) {
   json = json || {};
 
-  // strip password from raw data
-  delete json.password;
-
   this._json = json;
   this._dirty = false;
 };
 
 User.prototype = {
-  get email() {
-    return this._json.email;
+  get firstName() {
+    return this._json.firstName;
   },
 
-  set email(email) {
-    this._dirty = email !== this._json.email;
-    this._json.email = email;
+  get fullName() {
+    return _.format('%s %s', this._json.firstName, this._json.lastName);
   },
 
   get id() {
     return this._json.id;
   },
 
-  get json() {
-    return _.clone(this._json);
+  get oauth() {
+    return { token: this._json.token, secret: this._json.secret };
+  },
+
+  get url() {
+    return this._json.url;
   }
 };
 

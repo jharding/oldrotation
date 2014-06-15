@@ -1,4 +1,4 @@
-var auth, authenticate, compose, controller, mw, userRepo, views;
+var auth, authorize, compose, controller, mw, views;
 
 // external modules
 compose = require('koa-compose');
@@ -6,73 +6,34 @@ compose = require('koa-compose');
 // internal modules
 auth = appRequire('utils/auth');
 mw = appRequire('utils/endpoint_mw');
-userRepo = appRequire('repos/users');
 views = appRequire('views/users');
 
-authenticate = auth.authenticate('local');
+authorize = auth.authenticate('rdio');
 
 // export
 controller = module.exports = {
-  login: compose([
+  getRequestToken: compose([
     mw.requireUnauth,
-    authenticate,
-    redirectAfterLogin
+    authorize
+  ]),
+
+  getAccessToken: compose([
+    mw.requireUnauth,
+    authorize,
+    mw.redirectTo('/')
   ]),
 
   logout: compose([
     mw.logout,
-    mw.redirectTo('/login')
+    mw.redirectTo('/')
   ]),
 
   showLoggedInUser: compose([
     mw.requireAuth,
     showLoggedInUser
   ]),
-
-  showLogin: compose([
-    mw.requireUnauth,
-    showLogin
-  ]),
-
-  showSignup: compose([
-    mw.requireUnauth,
-    showSignup
-  ]),
-
-  signup: compose([
-    mw.requireUnauth,
-    signup
-  ])
 };
 
 function* showLoggedInUser() {
   this.body = yield views.settings.call(this, this.user);
-}
-
-function* showLogin() {
-  this.body = yield views.loginForm.call(this);
-}
-
-function* showSignup() {
-  this.body = yield views.signupForm.call(this);
-}
-
-function* signup() {
-  var email, password;
-
-  email = this.request.body.email;
-  password = this.request.body.password;
-
-  if (yield userRepo.isEmailTaken(email)) {
-    this.throw(422, 'email is already associated with an account');
-  }
-
-  yield userRepo.create(email, password);
-
-  // signup was successful, so let's log them in
-  return yield controller.login.call(this);
-}
-
-function* redirectAfterLogin() {
-  this.redirect(this.request.body.redirect_to || '/');
 }

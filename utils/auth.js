@@ -1,18 +1,26 @@
-var _, auth, co, compose, LocalStrategy, passport, userRepo;
+var _, auth, co, compose, creds, passport, rdioConfig, RdioStrategy, userRepo;
 
 // external modules
 _ = require('underscore');
 co = require('co');
 compose = require('koa-compose');
-LocalStrategy = require('passport-local').Strategy;
+RdioStrategy = require('passport-rdio').Strategy;
 passport = require('koa-passport');
 
 // internal modules
+creds = appRequire('utils/creds');
 userRepo = appRequire('repos/users');
 
 passport.serializeUser(co(serializeUser));
 passport.deserializeUser(co(deserializeUser));
-passport.use(new LocalStrategy({ usernameField: 'email' }, co(verify)));
+
+rdioConfig = {
+  consumerKey: creds.rdio.consumerKey,
+  consumerSecret: creds.rdio.consumerSecret,
+  callbackURL: 'http://127.0.0.1:3000/auth/rdio/callback'
+};
+
+passport.use(new RdioStrategy(rdioConfig, co(verify)));
 
 // export
 auth = module.exports = {
@@ -46,9 +54,6 @@ function* deserializeUser(id) {
   return yield userRepo.findById(id);
 }
 
-function* verify(email, password) {
-    var validCreds;
-
-    validCreds = yield userRepo.verifyCredentials(email, password);
-    return validCreds ? yield userRepo.findByEmail(email) : null;
+function* verify(token, secret, profile) {
+  return yield userRepo.refresh(profile._json.result, token, secret);
 }

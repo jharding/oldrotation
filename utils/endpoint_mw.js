@@ -15,7 +15,7 @@ module.exports = {
 
   requireAuth: function* requireAuth(next) {
     if (this.isUnauthenticated()) {
-      this.redirect('/login');
+      this.redirect('/');
       return;
     }
 

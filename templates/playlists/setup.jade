@@ -1,0 +1,13 @@
+extends ../logged_in_base
+block head
+  title Let's Get Started
+block append body
+  form(action="/playlists", method="post")
+    include ../includes/csrf_form_token
+    div
+      label Name:
+      input(type="text", name="name")
+      label Description:
+      input(type="text", name="description")
+    div
+    button(type="submit") Create

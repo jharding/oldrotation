@@ -10,11 +10,8 @@ require('./utils/app_require.js')(__dirname); // add appRequire to global namesp
 var auth = appRequire('utils/auth');
 var csrf = appRequire('utils/csrf');
 var viewCtx = appRequire('utils/view_ctx');
-var usersController = appRequire('controllers/users');
-var notificationsController = appRequire('controllers/notifications');
-var db = appRequire('utils/postgres');
-
-db.configure({ user: 'push', database: 'push_dev' });
+var users = appRequire('controllers/users');
+var playlists = appRequire('controllers/playlists');
 
 var app = koa();
 
@@ -27,16 +24,13 @@ app.use(auth.initialize());
 app.use(csrf.protect(app));
 app.use(viewCtx);
 
-app.use(_.get('/signup', usersController.showSignup));
-app.use(_.post('/signup', usersController.signup));
-app.use(_.get('/login', usersController.showLogin));
-app.use(_.post('/login', usersController.login));
-app.use(_.get('/logout', usersController.logout));
-app.use(_.get('/account', usersController.showLoggedInUser));
-app.use(_.get('/', usersController.showLoggedInUser));
-app.use(_.get('/notifications/new', notificationsController.showNewForm));
-app.use(_.post('/notifications/new', notificationsController.create));
-app.use(_.get('/notifications/:id', notificationsController.show));
+app.use(_.get('/', users.showLoggedInUser));
+app.use(_.get('/auth/rdio', users.getRequestToken));
+app.use(_.get('/auth/rdio/callback', users.getAccessToken));
+app.use(_.get('/logout', users.logout));
+app.use(_.get('/setup', playlists.setup));
+app.use(_.post('/playlists', playlists.create));
+app.use(_.get('/playlists/:id/sync', playlists.sync));
 
 app.listen(3000);
 console.log('listening on port 3000');
