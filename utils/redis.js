@@ -1,16 +1,27 @@
-var client, redis, thunkify;
+var _, blacklist, client, commands, redis, thunkify;
 
-// internal modules
+// external modules
+commands = require('redis/lib/commands');
 redis = require('redis');
 thunkify = require('thunkify');
 
+// internal modules
+_ = appRequire('utils/utils');
+
+// monkey patch Multi#exec to be a thunk
+redis.Multi.prototype.exec = thunkify(redis.Multi.prototype.exec);
+
 client = redis.createClient();
+blacklist = ['multi']; // don't thunkify
 
 // exports
-module.exports = {
-  hmset: thunkify(client.hmset).bind(client),
-  hgetall: thunkify(client.hgetall).bind(client),
-  set: thunkify(client.set).bind(client),
-  zadd: thunkify(client.zadd).bind(client),
-  zrangebyscore: thunkify(client.zrangebyscore).bind(client)
-};
+module.exports = _.chain(commands)
+.map(function(command) { return command.split(' ')[0]; })
+.reduce(function(memo, command) {
+  memo[command] = _.contains(blacklist, command) ?
+    client[command].bind(client) :
+    thunkify(client[command]).bind(client);
+
+  return memo;
+}, {})
+.value();

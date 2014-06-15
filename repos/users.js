@@ -21,7 +21,10 @@ users = module.exports = {
     json = jsonFromRdioResp(rdio, token, secret);
     keys = buildKeys(json.id);
 
-    yield redis.hmset(keys.base, json);
+    yield redis.multi()
+    .sadd(keys.all, json.id)
+    .hmset(keys.base, json)
+    .exec();
 
     return new User(json);
   }
@@ -42,9 +45,8 @@ function jsonFromRdioResp(json, token, secret) {
 }
 
 function buildKeys(id) {
-  var base = _.format('users/%s', id);
-
   return {
-    base: base
+    all: 'users',
+    base: _.format('users/%s', id)
   };
 }
