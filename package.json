@@ -1,13 +1,17 @@
 {
   "name": "rotation",
   "version": "0.0.0",
-  "description": "",
+  "description": "Music rotation management for America.",
+  "private": true,
   "main": "server.js",
   "engines": {
     "node": "0.11.13"
   },
   "author": "Jake Harding <jacob.s.harding@gmail.com> (http://thejakeharding.com/)",
-  "license": "ISC",
+  "repository" : {
+    "type" : "git",
+     "url" : "http://github.com/jharding/rotation.git"
+  },
   "dependencies": {
     "bcryptjs": "^1.0.1",
     "co": "^3.0.6",

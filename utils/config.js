@@ -4,7 +4,9 @@ var defaults, env, url;
 url = require('url');
 
 // internal modules
-defaults = appRequire('config/config.json');
+defaults = process.env.NODE_ENV !== 'production' ?
+  appRequire('config/config.json') :
+  null;
 
 env = process.env;
 
