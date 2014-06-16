@@ -13,8 +13,6 @@ RDIO_API_URL = 'http://api.rdio.com/1/';
 // exports
 rdio = module.exports = {
   createPlaylist: function* createPlaylist(user, o) {
-    var resp;
-
     o = _.chain(o || {})
     .pick('name', 'description', 'tracks')
     .extend({ method: 'createPlaylist', extras: 'trackKeys' })
@@ -26,12 +24,21 @@ rdio = module.exports = {
   },
 
   getPlaylist: function* getPlaylist(user, o) {
-    var resp;
-
     o = _.chain(o || {})
     .pick('playlist')
     .extend({ method: 'addToPlaylist', tracks: '', extras: 'trackKeys' })
     .value();
+
+    return yield post(user, o);
+  },
+
+  removeFromPlaylist: function* getPlaylist(user, o) {
+    o = _.chain(o || {})
+    .pick('playlist', 'index', 'count', 'tracks')
+    .extend({ method: 'removeFromPlaylist', extras: 'trackKeys' })
+    .value();
+
+    o.tracks = _.isArray(o.tracks) ? o.tracks.join(',') : o.tracks;
 
     return yield post(user, o);
   }
