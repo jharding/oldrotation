@@ -8,6 +8,12 @@ scorer = appRequire('utils/scorer');
 Playlist = appRequire('models/playlist');
 
 playlists = module.exports = {
+  allIds: function* allIds() {
+    var keys = buildKeys();
+
+    return yield redis.smembers(keys.all);
+  },
+
   create: function* create(user, name, description) {
     var json, resp, tracks, zaddArgs;
 
@@ -22,7 +28,10 @@ playlists = module.exports = {
     tracks = tracksFromRdioPlaylist(resp.result);
     keys = buildKeys(json.id);
 
-    yield redis.hmset(keys.base, json);
+    yield redis.multi()
+    .sadd(keys.all, json.id)
+    .hmset(keys.base, json)
+    .exec();
 
     if (tracks.length) {
       zaddArgs = zaddArgsForTracks(keys.tracks, tracks);
@@ -82,12 +91,25 @@ playlists = module.exports = {
 };
 
 function buildKeys(id) {
-  var base = _.format('playlists/%s', id);
+  var base = id ? _.format('playlists/%s', id) : null;
 
   return {
-    base: base,
-    tracks: _.format('%s/tracks', base)
+    get all() {
+      return 'playlists';
+    },
+
+    get base() {
+      return base ? base : noId();
+    },
+
+    get tracks() {
+      return base ? _.format('%s/tracks', base) : noId();
+    },
   };
+
+  function noId() {
+    throw new Error('id not provided, key is not available');
+  }
 }
 
 function getPurgeBlocks(tracks, stale) {

@@ -12,6 +12,7 @@ var csrf = appRequire('utils/csrf');
 var viewCtx = appRequire('utils/view_ctx');
 var users = appRequire('controllers/users');
 var playlists = appRequire('controllers/playlists');
+var cronSync = appRequire('cron/sync');
 
 var app = koa();
 
@@ -24,6 +25,8 @@ app.use(auth.initialize());
 app.use(csrf.protect(app));
 app.use(viewCtx);
 
+cronSync.start();
+
 app.use(_.get('/', users.showLoggedInUser));
 app.use(_.get('/auth/rdio', users.getRequestToken));
 app.use(_.get('/auth/rdio/callback', users.getAccessToken));
@@ -32,5 +35,5 @@ app.use(_.get('/setup', playlists.setup));
 app.use(_.post('/playlists', playlists.create));
 app.use(_.get('/playlists/:id/sync', playlists.sync));
 
-app.listen(3000);
+app.listen(process.env.PORT || 5000);
 console.log('listening on port 3000');
