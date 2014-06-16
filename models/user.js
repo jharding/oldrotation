@@ -1,7 +1,8 @@
-var _, User;
+var _, userRepo, User;
 
 // internal modules
 _ = appRequire('utils/utils');
+userRepo = appRequire('repos/users');
 
 User = function User(json) {
   json = json || {};
@@ -10,13 +11,35 @@ User = function User(json) {
   this._dirty = false;
 };
 
+// class methods
+_.extend(User, {
+  findById: function* findById(id) {
+    var json = yield userRepo.findById(id);
+    return json ? new User(json) : null;
+  },
+
+  findByRdioId: function* findByRdioId(id) {
+    var json = yield userRepo.findByRdioId(id);
+    return json ? new User(json) : null;
+  },
+
+  rdioFindOrCreate: function* rdioFindOrCreate(rdioJson, token, secret) {
+    var json;
+
+    // if the user exists, update thier rdio creds
+    // otherwise create a new user
+    (json = yield User.findByRdioId(rdioJson.key)) ?
+      (yield userRepo.updateRdioCreds(json.id, token, secret)) :
+      (json = yield userRepo.createFromRdioData(rdioJson, token, secret));
+
+    return json ? new User(json) : null;
+  }
+});
+
+// instance methods
 User.prototype = {
   get firstName() {
     return this._json.firstName;
-  },
-
-  get fullName() {
-    return _.format('%s %s', this._json.firstName, this._json.lastName);
   },
 
   get id() {
@@ -24,11 +47,7 @@ User.prototype = {
   },
 
   get oauth() {
-    return { token: this._json.token, secret: this._json.secret };
-  },
-
-  get url() {
-    return this._json.url;
+    return { token: this._json.rdioToken, secret: this._json.rdioSecret };
   }
 };
 

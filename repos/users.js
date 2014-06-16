@@ -1,52 +1,63 @@
-var _, redis, User, users;
+var _, keys, redis, repo;
 
 // internal modules
 _ = appRequire('utils/utils');
 redis = appRequire('utils/redis');
-User = appRequire('models/user');
 
-users = module.exports = {
-  findById: function* refresh(id) {
-    var json, keys;
-
-    keys = buildKeys(id);
-    json = yield redis.hgetall(keys.base);
-
-     return json ? new User(json) : null;
+keys = {
+  get idIncr() {
+    return 'rot:user:id_incr';
   },
 
-  refresh: function* refresh(rdio, token, secret) {
-    var json, keys;
+  idFromRdioId: function(rdioId) {
+    return _.format('rot:rdio:user:%s:rot_user_id', rdioId);
+  },
 
-    json = jsonFromRdioResp(rdio, token, secret);
-    keys = buildKeys(json.id);
+  rotation: function(id) {
+    return _.format('rot:user:id:%s:rdio:rotation_id', id);
+  },
 
-    yield redis.multi()
-    .sadd(keys.all, json.id)
-    .hmset(keys.base, json)
-    .exec();
-
-    return new User(json);
+  user: function(id) {
+    return _.format('rot:user:id:%s', id);
   }
 };
 
-function jsonFromRdioResp(json, token, secret) {
-  return {
-    id: json.key,
-    firstName: json.firstName,
-    lastName: json.lastName,
-    url: json.url,
-    icon100: json.icon,
-    icon250: json.icon250,
-    icon500: json.icon500,
-    token: token,
-    secret: secret
-  };
-}
+// exports
+repo = module.exports = {
+  createFromRdio: function* createFromRdio(rdioJson, token, secret) {
+    var userHash, userId;
 
-function buildKeys(id) {
+    userId = yield redis.incr(keys.idIncr);
+    userHash = userHashFromRdioData(userId, rdioJson, token, secret);
+
+    yield redis.multi()
+    .set(keys.idFromRdioId(userHash.rdioUserId), userId)
+    .hmset(keys.user(userId), userHash)
+    .exec();
+
+    return userHash;
+  },
+
+  findById: function* findById(id) {
+    return yield redis.hgetall(keys.user(id));
+  },
+
+  findByRdioId: function* findByRdioId(rdioId) {
+    var userId = yield redis.get(keys.idFromRdioId(rdioId));
+    return userId ? (yield redis.hgetall(keys.user(userId))) : null;
+  },
+
+  updateRdioCreds: function* updateRdioCreds(id, token, secret) {
+    yield redis.hmset(keys.user(id), { rdioToken: token, rdioSecret: secret });
+  }
+};
+
+function userHashFromRdioData(userId, rdioJson, token, secret) {
   return {
-    all: 'users',
-    base: _.format('users/%s', id)
+    id: userId,
+    firstName: rdioJson.firstName,
+    rdioUserId: rdioJson.key,
+    rdioToken: token,
+    rdioSecret: secret
   };
 }

@@ -1,4 +1,4 @@
-var _, auth, co, compose, config, passport, rdioConfig, RdioStrategy, userRepo;
+var _, auth, co, compose, config, passport, rdioConfig, RdioStrategy, User;
 
 // external modules
 _ = require('underscore');
@@ -9,7 +9,7 @@ passport = require('koa-passport');
 
 // internal modules
 config = appRequire('utils/config');
-userRepo = appRequire('repos/users');
+User = appRequire('models/user');
 
 passport.serializeUser(co(serializeUser));
 passport.deserializeUser(co(deserializeUser));
@@ -51,9 +51,10 @@ function* serializeUser(user) {
 }
 
 function* deserializeUser(id) {
-  return yield userRepo.findById(id);
+  return yield User.findById(id);
 }
 
 function* verify(token, secret, profile) {
-  return yield userRepo.refresh(profile._json.result, token, secret);
+  var rdioJson = profile._json.result;
+  return yield User.rdioFindOrCreate(rdioJson, token, secret);
 }
