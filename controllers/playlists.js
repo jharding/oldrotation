@@ -1,4 +1,4 @@
-var compose, controller, mw, playlistRepo, views;
+var compose, controller, mw, playlistRepo, routes, views;
 
 // external modules
 compose = require('koa-compose');
@@ -8,8 +8,18 @@ mw = appRequire('utils/endpoint_mw');
 playlistRepo = appRequire('repos/playlists');
 views = appRequire('views/playlists');
 
+routes = {
+  'get /playlists/new': 'setup',
+  'post /playlists': 'create',
+  'get /playlists/:id/sync': 'sync'
+};
+
 // export
 controller = module.exports = {
+  get routes() {
+    return routes;
+  },
+
   create: compose([
     mw.requireAuth,
     createPlaylists

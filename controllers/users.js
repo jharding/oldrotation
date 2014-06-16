@@ -1,4 +1,4 @@
-var auth, authorize, compose, controller, mw, views;
+var auth, authorize, compose, controller, mw, routes, views;
 
 // external modules
 compose = require('koa-compose');
@@ -10,14 +10,24 @@ views = appRequire('views/users');
 
 authorize = auth.authenticate('rdio');
 
+routes = {
+  'get /auth/rdio': 'getRequestToken',
+  'get /auth/rdio/callback': 'storeAccessToken',
+  'get /logout': 'logout'
+};
+
 // export
 controller = module.exports = {
+  get routes() {
+    return routes;
+  },
+
   getRequestToken: compose([
     mw.requireUnauth,
     authorize
   ]),
 
-  getAccessToken: compose([
+  storeAccessToken: compose([
     mw.requireUnauth,
     authorize,
     mw.redirectTo('/')
@@ -26,14 +36,5 @@ controller = module.exports = {
   logout: compose([
     mw.logout,
     mw.redirectTo('/')
-  ]),
-
-  showLoggedInUser: compose([
-    mw.requireAuth,
-    showLoggedInUser
-  ]),
+  ])
 };
-
-function* showLoggedInUser() {
-  this.body = yield views.settings.call(this, this.user);
-}
