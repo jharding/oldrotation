@@ -23,8 +23,11 @@ viewCtx = appRequire('utils/view_ctx');
 app = koa();
 app.keys = ['dTmka*uIwd$BfN8', 'Ue0kDaU$l!8zAEF', 'Q7zC70PK%Bm@%By'];
 
+if (app.env === 'development') {
+  app.use(logger());
+}
+
 // register middleware that should be applied for every request
-app.use(logger());
 app.use(bodyparser());
 app.use(session());
 app.use(auth.initialize());
