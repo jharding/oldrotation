@@ -12,6 +12,10 @@ INTERVAL_IN_MS = 1 * 1000 * 60 * 60; // 1 hour
 
 // exports
 module.exports = {
+  force: function force() {
+    co(syncPlaylists)();
+  },
+
   start: function start() {
     intervalId = intervalId || setInterval(co(syncPlaylists), INTERVAL_IN_MS);
   },
@@ -26,6 +30,7 @@ function* syncPlaylists() {
 
   ids = yield playlistRepo.allIds();
   console.log(ids)
+
   while (id = ids.shift()) {
     yield syncPlaylist(id);
   }

@@ -41,5 +41,11 @@ cronSync.start();
 routeManager(app, users);
 routeManager(app, playlists);
 
+// TODO: remove this shit
+var route = require('koa-route');
+app.use(route.get('/playlists/force_sync', function* () {
+  cronSync.force();
+}));
+
 app.listen(process.env.PORT || 3000);
 console.log('listening on port ' + (process.env.PORT || 3000));
