@@ -1,2 +1,4 @@
 node_modules
-credentials
+config/config.json
+
+npm-debug.log

@@ -1,4 +1,4 @@
-var _, auth, co, compose, creds, passport, rdioConfig, RdioStrategy, userRepo;
+var _, auth, co, compose, config, passport, rdioConfig, RdioStrategy, userRepo;
 
 // external modules
 _ = require('underscore');
@@ -8,16 +8,16 @@ RdioStrategy = require('passport-rdio').Strategy;
 passport = require('koa-passport');
 
 // internal modules
-creds = appRequire('utils/creds');
+config = appRequire('utils/config');
 userRepo = appRequire('repos/users');
 
 passport.serializeUser(co(serializeUser));
 passport.deserializeUser(co(deserializeUser));
 
 rdioConfig = {
-  consumerKey: creds.rdio.consumerKey,
-  consumerSecret: creds.rdio.consumerSecret,
-  callbackURL: 'http://127.0.0.1:3000/auth/rdio/callback'
+  consumerKey: config.rdio.consumerKey,
+  consumerSecret: config.rdio.consumerSecret,
+  callbackURL: _.format('%s/auth/rdio/callback', config.app.url)
 };
 
 passport.use(new RdioStrategy(rdioConfig, co(verify)));

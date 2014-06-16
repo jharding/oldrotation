@@ -1,17 +1,24 @@
-var _, blacklist, client, commands, redis, thunkify;
+var _, blacklist, client, commands, config, redis, thunkify, url;
 
 // external modules
 commands = require('redis/lib/commands');
 redis = require('redis');
 thunkify = require('thunkify');
+url = require('url');
 
 // internal modules
 _ = appRequire('utils/utils');
+config = appRequire('utils/config');
 
 // monkey patch Multi#exec to be a thunk
 redis.Multi.prototype.exec = thunkify(redis.Multi.prototype.exec);
 
-client = redis.createClient();
+// configure the redis client
+client = redis.createClient(config.redis.url.port, config.redis.url.hostname, {
+  no_ready_check: true,
+  auth_pass: config.redis.url.auth && config.redis.url.auth.split(':')[1]
+});
+
 blacklist = ['multi']; // don't thunkify
 
 // exports

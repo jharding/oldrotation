@@ -1,10 +1,10 @@
-var _, creds, rdio, RDIO_API_URL, request;
+var _, config, rdio, RDIO_API_URL, request;
 
 // internal modules
 
 // internal modules
 _ = appRequire('utils/utils');
-creds = appRequire('utils/creds');
+config = appRequire('utils/config');
 request = appRequire('utils/request');
 
 // constants
@@ -59,8 +59,8 @@ function* post(user, params) {
 
 function oauth(user) {
   return {
-    consumer_key: creds.rdio.consumerKey,
-    consumer_secret: creds.rdio.consumerSecret,
+    consumer_key: config.rdio.consumerKey,
+    consumer_secret: config.rdio.consumerSecret,
     token: user.oauth.token,
     token_secret: user.oauth.secret
   };
