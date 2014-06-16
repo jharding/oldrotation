@@ -1,6 +1,14 @@
 var app, auth, bodyparser, cronSync, csrf, koa, logger, playlists,
     routeManager, session, thunkify, users, viewCtx;
 
+// must go before all other requires
+if (process.env.NODETIME_ACCOUNT_KEY) {
+  require('nodetime').profile({
+    accountKey: process.env.NODETIME_ACCOUNT_KEY,
+    appName: 'Rotation'
+  });
+}
+
 // external modules
 bodyparser = require('koa-bodyparser');
 koa = require('koa');

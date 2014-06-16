@@ -8,9 +8,9 @@
     "node": "0.11.13"
   },
   "author": "Jake Harding <jacob.s.harding@gmail.com> (http://thejakeharding.com/)",
-  "repository" : {
-    "type" : "git",
-     "url" : "http://github.com/jharding/rotation.git"
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/jharding/rotation.git"
   },
   "dependencies": {
     "bcryptjs": "^1.0.1",
@@ -24,6 +24,7 @@
     "koa-passport": "^0.4.0",
     "koa-route": "^1.1.4",
     "moment": "^2.7.0",
+    "nodetime": "^0.8.15",
     "passport-local": "^1.0.0",
     "passport-rdio": "^0.1.2",
     "pg": "^3.3.0",
