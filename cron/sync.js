@@ -8,12 +8,12 @@ playlistRepo = appRequire('repos/playlists');
 userRepo = appRequire('repos/users');
 
 // constants
-INTERVAL_IN_MS = 1 * 1000 * 60 * 60 * 24; // 1 day
+INTERVAL_IN_MS = 1 * 1000 * 60 * 60; // 1 hour
 
 // exports
 module.exports = {
   start: function start() {
-    co(syncPlaylists)();
+    intervalId = intervalId || setInterval(co(syncPlaylists), INTERVAL_IN_MS);
   },
 
   stop: function stop() {

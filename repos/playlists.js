@@ -51,8 +51,8 @@ playlists = module.exports = {
   },
 
   sync: function* sync(user, id) {
-    var fetchedTracks, json, keys, newTracks, purgeBlocks, staleTracks,
-        storedTracks, zaddArgs;
+    var fetchedTracks, json, keys, newTracks, purgeBlocks, removedTracks,
+        staleTracks, storedTracks, zaddArgs;
 
     resp = yield rdio.getPlaylist(user, { playlist: id });
 
@@ -65,6 +65,12 @@ playlists = module.exports = {
     storedTracks = yield redis.zrangebyscore([keys.tracks, '-inf', '+inf']);
     staleTracks = yield redis.zrangebyscore([keys.tracks, '-inf', scorer.fresh]);
     newTracks = _.difference(fetchedTracks, storedTracks);
+    removedTracks = _.difference(storedTracks, fetchedTracks);
+
+    // remove tracks that have been manually removed since last sync
+    if (removedTracks.length) {
+      var a = yield redis.zrem([keys.tracks].concat(removedTracks));
+    }
 
     // store new tracks with their score set to now
     if (newTracks.length) {
