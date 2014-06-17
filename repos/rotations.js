@@ -5,14 +5,24 @@ var _, rdio, rKeys, redis, rotationRepo, scorer, users;
 
 rotationRepo = module.exports = {
   findByOwnerId: function* findByOwnerId(ownerId) {
-    var results;
+    return yield redis.hgetall(rKeys.rotationMetadata(ownerId));
+  },
 
-    results = yield [
-      redis.hgetall(rKeys.rotationMetadata(ownerId)),
-      redis.zrangebyscore([rKeys.rotationTracks(ownerId), '-inf', '+inf'])
-    ];
+  getTracksByOwnerId: function* getTracksByOwnerId(ownerId) {
+    var rKey, result, trackIds, tracks;
 
-    return results[0] ? { metadata: results[0], tracks: results[1] } : null;
+    rKey = rKeys.rotationTracks(ownerId);
+    result = yield redis.zrangebyscore([rKey, '-inf', '+inf', 'WITHSCORES']);
+
+    for (var i = 0, trackIds = []; i < result.length; i += 2) {
+      trackIds.unshift(result[i]);
+    }
+
+    trackRKeys = _.map(trackIds, rKeys.track);
+    tracks = yield redis.mget(trackRKeys);
+    tracks = _.map(tracks, JSON.parse);
+
+    return _.object(trackIds, tracks);
   },
 
   create: function* create(user, name, description) {
@@ -36,36 +46,41 @@ rotationRepo = module.exports = {
   },
 
   sync: function* sync(user, rotationId) {
-    var fetchedTracks, hash, newTracks, purgeBlocks, rdioResp, removedTracks,
-        staleTracks, storedTracks, trackKey, zaddArgs;
+    var rdioResp, hash, fetchedTracks, fetchedKeys, tracksRKey, storedKeys,
+        staleKeys, newKeys, removedKeys, zaddArgs, purgeBlocks;
+
 
     rdioResp = yield rdio.getPlaylist(user, { playlist: rotationId });
 
     if (rdioResp.err) { throw new Error(rdioResp.err); }
 
     hash = metadataHashFromRdioPlaylist(rdioResp.result);
-    fetchedTracks = tracksFromRdioPlaylist(rdioResp.result);
+    fetchedTracks = rdioResp.result.tracks;
+    fetchedKeys = _.pluck(fetchedTracks, 'key');
 
-    tracksKey = rKeys.rotationTracks(user.id);
-    storedTracks = yield redis.zrangebyscore([tracksKey, '-inf', '+inf']);
-    staleTracks = yield redis.zrangebyscore([tracksKey, '-inf', scorer.fresh]);
-    newTracks = _.difference(fetchedTracks, storedTracks);
-    removedTracks = _.difference(storedTracks, fetchedTracks);
+    // store the data for the fetched tracks, but do it offline
+    storeTracks(fetchedTracks);
+
+    tracksRKey = rKeys.rotationTracks(user.id);
+    storedKeys = yield redis.zrangebyscore([tracksRKey, '-inf', '+inf']);
+    staleKeys = yield redis.zrangebyscore([tracksRKey, '-inf', scorer.fresh]);
+    newKeys = _.difference(fetchedKeys, storedKeys);
+    removedKeys = _.difference(storedKeys, fetchedKeys);
 
     // remove tracks that have been manually removed since last sync
-    if (removedTracks.length) {
-      var a = yield redis.zrem([tracksKey].concat(removedTracks));
+    if (removedKeys.length) {
+      yield redis.zrem([tracksRKey].concat(removedKeys));
     }
 
     // store new tracks with their score set to now
-    if (newTracks.length) {
-      zaddArgs = zaddArgsForTracks(tracksKey, newTracks);
+    if (newKeys.length) {
+      zaddArgs = zaddArgsForTrackKeys(tracksRKey, newKeys);
       yield redis.zadd(zaddArgs);
     }
 
     // remove stale tracks from rdio playlist
-    if (staleTracks.length) {
-      purgeBlocks = getPurgeBlocks(fetchedTracks, staleTracks);
+    if (staleKeys.length) {
+      purgeBlocks = getPurgeBlocks(fetchedKeys, staleKeys);
 
       // these requests have to be executed in series in order to work around
       // the rdio api requirement that requires the count and index
@@ -80,9 +95,9 @@ rotationRepo = module.exports = {
     }
 
     return {
-      newTracks: newTracks,
-      removedTracks: removedTracks,
-      staleTracks: staleTracks
+      newTracks: newKeys,
+      removedTracks: removedKeys,
+      staleTracks: staleKeys
     };
   }
 };
@@ -135,11 +150,25 @@ function metadataHashFromRdioPlaylist(rdioPlaylist) {
   };
 }
 
-function tracksFromRdioPlaylist(rdioPlaylist) {
-  return rdioPlaylist.trackKeys || [];
+function storeTracks(tracks) {
+  var args;
+
+  if (!tracks || !tracks.length) {
+    return;
+  }
+
+  args = _.chain(tracks)
+  .map(function(v) { return [rKeys.track(v.key), JSON.stringify(v)]; })
+  .flatten()
+  .value()
+
+  console.log('storing tracks');
+  redis.mset(args)(function() {
+    console.log(arguments);
+  });
 }
 
-function zaddArgsForTracks(key, tracks) {
+function zaddArgsForTrackKeys(key, tracks) {
   var score = scorer.now;
 
   return _.chain(tracks)

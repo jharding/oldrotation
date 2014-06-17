@@ -26,7 +26,7 @@ rdio = module.exports = {
   getPlaylist: function* getPlaylist(user, o) {
     o = _.chain(o || {})
     .pick('playlist')
-    .extend({ method: 'addToPlaylist', tracks: '', extras: 'trackKeys' })
+    .extend({ method: 'addToPlaylist', tracks: '', extras: 'tracks' })
     .value();
 
     return yield post(user, o);

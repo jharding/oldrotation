@@ -45,15 +45,15 @@ _.extend(Rotation, {
 // instance methods
 Rotation.prototype = {
   get description() {
-    return this._json.metadata.description;
+    return this._json.description;
   },
 
   get name() {
-    return this._json.metadata.name;
+    return this._json.name;
   },
 
   get rdioId() {
-    return this._json.metadata.rdioId;
+    return this._json.rdioId;
   },
 
   owner: function* owner() {
@@ -64,5 +64,10 @@ Rotation.prototype = {
   sync: function* sync() {
     var owner = yield this.owner();
     return yield rotationRepo.sync(owner, this.rdioId);
+  },
+
+  tracks: function* tracks() {
+    var owner = yield this.owner();
+    return yield rotationRepo.getTracksByOwnerId(owner.id);
   }
 };

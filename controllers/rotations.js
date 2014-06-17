@@ -25,6 +25,14 @@ controller = module.exports = {
     }
   ]),
 
+ 'get /rotation/tracks': compose([
+    mw.requireAuth,
+    function*() {
+      var r = yield this.user.rotation();
+      this.body = yield r.tracks();
+    }
+  ]),
+
  'get /playlists/:id/sync': compose([
     mw.requireAuth,
     syncPlaylist

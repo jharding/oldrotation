@@ -56,7 +56,7 @@ module.exports = {
     },
 
     track: function(trackId) {
-      return _.format('rot:rdio:track:id=%s', trackid);
+      return _.format('rot:rdio:track:id=%s', trackId);
     },
 
     user: function(userId) {
