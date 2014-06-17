@@ -1,4 +1,4 @@
-var _, userRepo, User;
+var _, Rotation, userRepo, User;
 
 // export
 // ------
@@ -15,6 +15,7 @@ User = module.exports = function User(json) {
 
 // internal modules
 _ = appRequire('utils/utils');
+Rotation = appRequire('models/rotation');
 userRepo = appRequire('repos/users');
 
 // implementation
@@ -57,5 +58,9 @@ User.prototype = {
 
   get oauth() {
     return { token: this._json.rdioToken, secret: this._json.rdioSecret };
+  },
+
+  rotation: function* rotation() {
+    return yield Rotation.findByOwner(this);
   }
 };

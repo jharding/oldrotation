@@ -21,7 +21,7 @@ controller = module.exports = {
  'get /rotation': compose([
     mw.requireAuth,
     function*() {
-      this.body = yield Rotation.findByOwner(this.user);
+      this.body = yield this.user.rotation();
     }
   ]),
 
@@ -56,6 +56,6 @@ function* renderSetup() {
 }
 
 function* syncPlaylist(id) {
-  var rotation = yield Rotation.findByOwner(this.user);
+  var rotation = yield this.user.rotation();
   yield rotation.sync();
 }
