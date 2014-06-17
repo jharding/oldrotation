@@ -1,15 +1,24 @@
 var _, userRepo, User;
 
-// internal modules
-_ = appRequire('utils/utils');
-userRepo = appRequire('repos/users');
+// export
+// ------
 
-User = function User(json) {
+User = module.exports = function User(json) {
   json = json || {};
 
   this._json = json;
   this._dirty = false;
 };
+
+// dependencies
+// ------------
+
+// internal modules
+_ = appRequire('utils/utils');
+userRepo = appRequire('repos/users');
+
+// implementation
+// --------------
 
 // class methods
 _.extend(User, {
@@ -30,7 +39,7 @@ _.extend(User, {
     // otherwise create a new user
     (json = yield User.findByRdioId(rdioJson.key)) ?
       (yield userRepo.updateRdioCreds(json.id, token, secret)) :
-      (json = yield userRepo.createFromRdioData(rdioJson, token, secret));
+      (json = yield userRepo.createFromRdio(rdioJson, token, secret));
 
     return json ? new User(json) : null;
   }
@@ -50,6 +59,3 @@ User.prototype = {
     return { token: this._json.rdioToken, secret: this._json.rdioSecret };
   }
 };
-
-// export
-module.exports = User;

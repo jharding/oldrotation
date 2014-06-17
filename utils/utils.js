@@ -1,15 +1,18 @@
-var _, format;
+var _, format, User;
+
+// exports
+_ = module.exports = require('underscore');
 
 // external modules
 format = require('util').format;
 
-
-// external modules
-_ = require('underscore');
-
-// exports
-module.exports = _;
+// internal modules
+User = appRequire('models/user');
 
 _.mixin({
-  format: format
+  format: format,
+
+  isUser: function isUser(obj) {
+    return obj instanceof User;
+  }
 });

@@ -1,4 +1,5 @@
-var _, blacklist, client, commands, config, redis, thunkify, url;
+var _, blacklist, client, commands, config, redis, thunkifiedClient,
+    thunkify, url;
 
 // external modules
 commands = require('redis/lib/commands');
@@ -19,10 +20,10 @@ client = redis.createClient(config.redis.url.port, config.redis.url.hostname, {
   auth_pass: config.redis.url.auth && config.redis.url.auth.split(':')[1]
 });
 
-blacklist = ['multi']; // don't thunkify
+// redis client commands not to thunkify
+blacklist = ['multi'];
 
-// exports
-module.exports = _.chain(commands)
+thunkifiedClient =_.chain(commands)
 .map(function(command) { return command.split(' ')[0]; })
 .reduce(function(memo, command) {
   memo[command] = _.contains(blacklist, command) ?
@@ -32,3 +33,34 @@ module.exports = _.chain(commands)
   return memo;
 }, {})
 .value();
+
+// exports
+module.exports = {
+  client: thunkifiedClient,
+
+  keys: {
+    get userIdIncr() {
+      return 'rot:user:id_incr';
+    },
+
+    rdioIdToUserId: function(rdioId) {
+      return _.format('rot:user:rdio_id=%s', rdioId);
+    },
+
+    rotationMetadata: function(userId) {
+      return _.format('rot:user:id=%s:rdio:rotation:playlist', userId);
+    },
+
+    rotationTracks: function(userId) {
+      return _.format('rot:user:id=%s:rdio:rotation:tracks', userId);
+    },
+
+    track: function(trackId) {
+      return _.format('rot:rdio:track:id=%s', trackid);
+    },
+
+    user: function(userId) {
+      return _.format('rot:user:id=%s', userId);
+    }
+  }
+};

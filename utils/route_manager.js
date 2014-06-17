@@ -11,11 +11,11 @@ routes = {};
 
 // exports
 module.exports = function registerController(app, controller) {
-  if (!app || !controller || !controller.routes) {
+  if (!app || !controller) {
     throw new Error('unable to register controller');
   }
 
-  _.each(controller.routes, function(action, route) {
+  _.each(controller, function(fn, route) {
     var method, parts, path;
 
     parts = route.split(/\s+/);
@@ -26,7 +26,7 @@ module.exports = function registerController(app, controller) {
       throw new Error(_.format('route %s has already been registered', path));
     }
 
-    app.use(router[method](path, controller[action]));
+    app.use(router[method](path, fn));
     routes[route] = true;
   });
 };
