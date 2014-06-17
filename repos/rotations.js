@@ -37,7 +37,7 @@ rotationRepo = module.exports = {
 
   sync: function* sync(user, rotationId) {
     var fetchedTracks, hash, newTracks, purgeBlocks, rdioResp, removedTracks,
-        staleTracks, storedTracks, trackKeys, zaddArgs;
+        staleTracks, storedTracks, trackKey, zaddArgs;
 
     rdioResp = yield rdio.getPlaylist(user, { playlist: rotationId });
 
@@ -78,6 +78,12 @@ rotationRepo = module.exports = {
         });
       };
     }
+
+    return {
+      newTracks: newTracks,
+      removedTracks: removedTracks,
+      staleTracks: staleTracks
+    };
   }
 };
 

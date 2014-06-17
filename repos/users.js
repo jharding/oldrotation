@@ -5,18 +5,17 @@ var _, redis, rKeys, userRepo;
 
 userRepo = module.exports = {
   createFromRdio: function* createFromRdio(rdioJson, token, secret) {
-    var userHash, userId;
+    var hash, userId;
 
     userId = yield redis.incr(rKeys.userIdIncr);
-    userHash = userHashFromRdioData(userId, rdioJson, token, secret);
+    hash = userHashFromRdioData(userId, rdioJson, token, secret);
 
-    // TODO: account for failure
     yield redis.multi()
-    .set(rKeys.rdioIdToUserId(userHash.rdioUserId), userId)
-    .hmset(rKeys.user(userId), userHash)
+    .set(rKeys.rdioIdToUserId(hash.rdioUserId), userId)
+    .hmset(rKeys.user(userId), hash)
     .exec();
 
-    return userHash;
+    return hash;
   },
 
   findById: function* findById(id) {

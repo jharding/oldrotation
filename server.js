@@ -1,5 +1,5 @@
-var app, auth, bodyparser, cronSync, csrf, koa, logger, playlists,
-    routeManager, session, thunkify, users, viewCtx;
+var app, auth, bodyparser, csrf, koa, logger, rotations, routeManager, session,
+    thunkify, users, viewCtx;
 
 // must go before all other requires
 if (process.env.NODETIME_ACCOUNT_KEY) {
@@ -21,9 +21,8 @@ require('./utils/app_require.js')(__dirname);
 
 // internal modules
 auth = appRequire('utils/auth');
-cronSync = appRequire('cron/sync');
 csrf = appRequire('utils/csrf');
-playlists = appRequire('controllers/playlists');
+rotations = appRequire('controllers/rotations');
 routeManager = appRequire('utils/route_manager');
 users = appRequire('controllers/users');
 viewCtx = appRequire('utils/view_ctx');
@@ -42,17 +41,15 @@ app.use(auth.initialize());
 app.use(csrf.protect(app));
 app.use(viewCtx);
 
-// periodically syncs playlists
-cronSync.start();
-
 // register controllers
 routeManager(app, users);
-routeManager(app, playlists);
+routeManager(app, rotations);
 
 // TODO: remove this shit
 var route = require('koa-route');
-app.use(route.get('/playlists/force_sync', function* () {
-  cronSync.force();
+app.use(route.get('/rotations/force_sync', function* () {
+  var rotation = yield this.user.rotation();
+  this.body = yield rotation.sync();
 }));
 
 app.listen(process.env.PORT || 3000);
