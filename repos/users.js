@@ -27,6 +27,10 @@ userRepo = module.exports = {
     return userId ? (yield redis.hgetall(rKeys.user(userId))) : null;
   },
 
+  maxUserId: function* maxUserId() {
+    return +(yield redis.get(rKeys.userIdIncr));
+  },
+
   updateRdioCreds: function* updateRdioCreds(id, token, secret) {
     yield redis.hmset(rKeys.user(id), { rdioToken: token, rdioSecret: secret });
   }

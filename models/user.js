@@ -33,6 +33,10 @@ _.extend(User, {
     return json ? new User(json) : null;
   },
 
+  maxUserId: function* maxUserId() {
+    return yield userRepo.maxUserId();
+  },
+
   rdioFindOrCreate: function* rdioFindOrCreate(rdioJson, token, secret) {
     var json;
 

@@ -38,6 +38,8 @@ thunkifiedClient =_.chain(commands)
 module.exports = {
   client: thunkifiedClient,
 
+  quit: client.quit.bind(client),
+
   keys: {
     get userIdIncr() {
       return 'rot:user:id_incr';
